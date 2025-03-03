@@ -3,9 +3,13 @@ from . import models, database
 from .database import engine
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from .routes import user
+
 
 
 app = FastAPI()
+
+app.include_router(user.router)
 
 @app.on_event("startup")
 async def create_tables():

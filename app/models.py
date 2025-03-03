@@ -4,12 +4,21 @@ from typing import Optional, List
 from datetime import datetime
 import uuid
 
-class Users(SQLModel, table=True, extend_existing=True):
+class UserBase(SQLModel):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     email: EmailStr = Field(unique=True, index=True)
     password: str = Field()
+
+class UserCreate(UserBase):
+    pass
+
+class Users(UserBase, table=True, extend_existing=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    tokens: List["Token"] = Relationship(back_populates="users")
+    tokens: List["Token"] = Relationship(back_populates="user")
+
+class UserPublic(SQLModel):
+    id: uuid.UUID 
+    email: EmailStr
 
 class Event(SQLModel, table=True, extend_existing=True):
     id:  Optional[int] = Field(default=None, primary_key=True)
