@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from sqlalchemy.exc import IntegrityError
 import asyncio
+from .. import email
 
 
 router = APIRouter(tags=['User'], prefix="/user")
@@ -20,6 +21,7 @@ async def create_user(user: models.UserCreate, session: AsyncSession = Depends(d
         session.add(new_user)
         await session.commit()
         await session.refresh(new_user)
+        await email.send_email(user.email, user.firstname)
         return new_user
     except IntegrityError:
         await session.rollback()

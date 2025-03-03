@@ -6,6 +6,7 @@ import uuid
 
 class UserBase(SQLModel):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    firstname: str
     email: EmailStr = Field(unique=True, index=True)
     password: str = Field()
 
