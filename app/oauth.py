@@ -8,15 +8,16 @@ from fastapi.security import OAuth2PasswordBearer
 from . database import get_session
 from sqlmodel import Session
 from . config import settings
+import uuid
 
 
 oauth_schema = OAuth2PasswordBearer(tokenUrl="login")
 
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
-EXPIRATION_TIME = settings.expiration_time
+EXPIRATION_TIME = int(settings.expiration_time)
 
-def create_jwt(data:dict):
+async def create_jwt(data:dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=EXPIRATION_TIME)
 
@@ -26,11 +27,11 @@ def create_jwt(data:dict):
 
     return encoded_jwt
 
-def verify_token(token: str, credentials_exception):
+async def verify_token(token: str, credentials_exception):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        token_data = models.Token_Data(id=payload["user_id"])
+        token_data = models.jwt_data(id=uuid.UUID(payload["user_id"]))
 
         if token_data.id is None:
             raise credentials_exception
@@ -41,11 +42,11 @@ def verify_token(token: str, credentials_exception):
     
     return token_data
     
-def get_current_user(token:str = Depends(oauth_schema), session: Session = Depends(get_session)):
+async def get_current_user(token:str = Depends(oauth_schema), session: Session = Depends(get_session)):
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="could not authorize", headers={"WWW-Authenticate": "Bearer"},)
     
-    token = verify_token(token, credentials_exception)
+    token = await verify_token(token, credentials_exception)
 
-    user = session.get(models.User, token.id)
+    user = await session.get(models.Users, token.id)
 
     return user

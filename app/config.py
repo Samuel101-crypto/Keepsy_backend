@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     expiration_time: str
     mailjet_api_key: str
     mailjet_api_secret: str
+    publisher_url:str
+    api_key: str
+    vault_id: str
     
     class Config:
         env_file = ".env"
