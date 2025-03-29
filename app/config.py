@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     api_key: str
     vault_id: str
     tusky_files_url: str
-    
+    google_jwks_url: str
+    google_issuer: str
+    client_id: str
     class Config:
         env_file = ".env"
 

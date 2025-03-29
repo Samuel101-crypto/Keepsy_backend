@@ -19,10 +19,22 @@ class UserLogin(SQLModel):
     email: EmailStr
     password: str
 
-class Users(UserBase, table=True, extend_existing=True):
+class Users(SQLModel, table=True, extend_existing=True):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    oauth_id : str = Field(unique=True, index=True) #Column(String, unique=True, index=True, nullable=False)
+    username: Optional[str] = Field() #Column(String, nullable=True)
+    email : Optional[EmailStr] = Field() #Column(String, nullable=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    wallet_address: Optional[str] = Field()
     tokens: List["Tokens"] = Relationship(back_populates="user", cascade_delete=True)
+    addresses: List["Address"] = Relationship(back_populates="user")
+
+class Address(SQLModel, table=True, extend_existing=True):
+    id :int = Field(index=True, primary_key=True) #Column(Integer, primary_key=True, index=True)
+    address: str = Field(unique=True)#Column(String, unique=True, nullable=False)
+    user_id: uuid.UUID = Field(foreign_key="users.id") #Column(Integer, ForeignKey("users.id"))
+    user: "Users" = Relationship(back_populates="addresses") #relationship("User", back_populates="addresses")
+
+
 
 class UserPublic(SQLModel):
     id: uuid.UUID 
@@ -33,7 +45,7 @@ class UserPublic(SQLModel):
 
 class Events(SQLModel, table=True, extend_existing=True):
     id:  Optional[int] = Field(default=None, primary_key=True)
-    organizer: str = Field(index=True,foreign_key="users.email", ondelete="CASCADE")
+    organizer: str = Field(index=True,foreign_key="users.id", ondelete="CASCADE") #created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     location: str = Field()
     event_name: str = Field()
     date_time: datetime = Field()
@@ -43,7 +55,6 @@ class Events(SQLModel, table=True, extend_existing=True):
     nft_decription: str = Field()
     upload_id: str = Field(unique=True)
     artwork_attributes: dict = Field(sa_column=Column(JSON))
-
     tokens: List["Tokens"] = Relationship(back_populates="events")
 
 class EventsPublic(SQLModel):
