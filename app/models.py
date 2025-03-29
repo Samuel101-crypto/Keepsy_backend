@@ -19,6 +19,9 @@ class UserLogin(SQLModel):
     email: EmailStr
     password: str
 
+class RegisterAddress(SQLModel):
+    address: Annotated[str, Field(regex=r"^0x[0-9a-fA-F]{64}$")]
+
 class Users(SQLModel, table=True, extend_existing=True):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     oauth_id : str = Field(unique=True, index=True) #Column(String, unique=True, index=True, nullable=False)
