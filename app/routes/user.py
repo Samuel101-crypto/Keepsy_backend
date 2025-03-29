@@ -27,21 +27,33 @@ async def create_user(user: models.UserCreate, session: AsyncSession = Depends(d
         await session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
     
-@router.get("/", response_model=list[models.UserPublic])
-async def get_users(current_user = Depends(oauth.get_current_user), session: AsyncSession = Depends(database.get_session)):
-    users = await session.execute(select(models.Users))
-    users = users.scalars().all()
-    if users is None:
-        return None
-    return users
+# @router.get("/", response_model=list[models.UserPublic])
+# async def get_users(current_user = Depends(oauth.get_current_user), session: AsyncSession = Depends(database.get_session)):
+#     users = await session.execute(select(models.Users))
+#     users = users.scalars().all()
+#     if users is None:
+#         return None
+#     return users
 
+@router.get("/", response_model=models.UserProfile)
+async def get_specific_user(current_user = Depends(oauth.get_current_user), session: AsyncSession = Depends(database.get_session)):
+    events_result = await session.execute(select(models.Events).where(models.Events.organizer == current_user.email))
+
+    events_result = events_result.scalars().all()
+
+    events_result = models.UserProfile(user=current_user,count=(len(events_result)), events=events_result)
+
+    return events_result
+    
+# @router.patch("/change_password")
+# async def change_password()
 
 @router.delete("/")
 async def delete_user(session: AsyncSession= Depends(database.get_session), current_user = Depends(oauth.get_current_user)):
     db_record = (await session.execute(select(models.Users).where(models.Users.id == current_user.id))).scalars().first()
 
-    # if not db_record:
-    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="T")
+    if not db_record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="no record found")
 
     await session.delete(db_record)
     await session.commit()

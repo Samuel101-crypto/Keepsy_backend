@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     publisher_url:str
     api_key: str
     vault_id: str
+    tusky_files_url: str
     
     class Config:
         env_file = ".env"

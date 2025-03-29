@@ -36,12 +36,34 @@ class Events(SQLModel, table=True, extend_existing=True):
     organizer: str = Field(index=True,foreign_key="users.email", ondelete="CASCADE")
     location: str = Field()
     event_name: str = Field()
+    date_time: datetime = Field()
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
     max_tokens: int = Field()
+    nft_type: int = Field(default=0)
+    nft_decription: str = Field()
     upload_id: str = Field(unique=True)
     artwork_attributes: dict = Field(sa_column=Column(JSON))
+
     tokens: List["Tokens"] = Relationship(back_populates="events")
 
+class EventsPublic(SQLModel):
+    id:  Optional[int] = Field(default=None, primary_key=True)
+    organizer: str = Field(index=True,foreign_key="users.email", ondelete="CASCADE")
+    location: str = Field()
+    event_name: str = Field()
+    date_time: datetime = Field()
+    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    max_tokens: int = Field()
+    tokens: List["Tokens"] = Relationship(back_populates="events")
+
+    class Config:
+        # Pydantic v3: use from_attributes instead of orm_mode
+        from_attributes = True
+
+class UserProfile(SQLModel):
+    user: UserPublic
+    count: int
+    events: List[EventsPublic]
 
 class EventCreate(SQLModel):
     organizer: str
@@ -64,3 +86,9 @@ class jwt_token(SQLModel):
 
 class jwt_data(SQLModel):
     id: uuid.UUID
+
+class AttendeeCreate(SQLModel):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str
+    email: EmailStr = Field(unique=True, index=True)
+    
